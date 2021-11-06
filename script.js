@@ -8,6 +8,68 @@ function Clone(element){
 function CloneAll(elements){
     return document.querySelectorAll(elements);
 }
+function CloseModal(){
+    Clone('.pizzaWindowArea').style.opacity = 0;
+    setTimeout(()=>{
+        Clone('.pizzaWindowArea').style.display = 'none';
+    },500);
+}
+function updateCart(){
+    Clone('.menu-openner span').innerHTML = cart.length;
+
+    if(cart.length > 0){
+        let subtotal = 0;
+        let desconto = 0;
+        let total = 0;
+
+        Clone('aside').classList.add('show');
+        Clone('.cart').innerHTML = '';
+        for(let i in cart){
+            let pizzaItem = pizzaJson.find((item)=>{
+                return item.id === cart[i].id;
+            });
+            subtotal += pizzaItem.price * cart[i].qt;
+            let cartItem = Clone('.models .cart--item').cloneNode(true);
+            let pizzaSizeName;
+            switch (cart[i].size){
+                case 0:
+                    pizzaSizeName = 'P';
+                    break;
+                case 1:
+                    pizzaSizeName = 'M';
+                    break;
+                case 2:
+                    pizzaSizeName = 'G';
+                    break;
+            }
+            let pizzaName = `${pizzaItem.name} (${pizzaSizeName})`;
+            cartItem.querySelector('img').src = pizzaItem.img;
+            cartItem.querySelector('.cart--item-nome').innerHTML = pizzaName;
+            cartItem.querySelector('.cart--item--qt').innerHTML = cart[i].qt;
+            cartItem.querySelector('.cart--item-qtmenos').addEventListener('click',()=>{
+                if(cart[i].qt > 1){
+                    cart[i].qt--;
+                } else {
+                    cart.splice(i, 1);
+                }
+                updateCart();
+            });
+            cartItem.querySelector('.cart--item-qtmais').addEventListener('click',()=>{
+                cart[i].qt++;
+                updateCart();
+            });
+            Clone('.cart').append(cartItem);
+        }
+        desconto = subtotal *0.1;
+        total = subtotal - desconto;
+        Clone('.subtotal span:last-child').innerHTML = `R$ ${subtotal.toFixed(2)}`;
+        Clone('.desconto span:last-child').innerHTML = `R$ ${desconto.toFixed(2)}`;
+        Clone('.total span:last-child').innerHTML = `R$ ${total.toFixed(2)}`;
+    } else {
+        Clone('aside').classList.remove('show');
+        Clone('aside').style.left = '100vw';
+    }
+}
 
 pizzaJson.map((item, index)=>{
     let pizzaItem = Clone('.models .pizza-item').cloneNode(true);
@@ -31,7 +93,7 @@ pizzaJson.map((item, index)=>{
         Clone('.pizzaInfo--size.selected').classList.remove('selected');
 
         CloneAll('.pizzaInfo--size').forEach((size, sizeIndex)=>{
-            if(sizeIndex === 2){
+            if(sizeIndex == 2){
                 size.classList.add('selected');
             }
             size.querySelector('span').innerHTML = pizzaJson[key].sizes[sizeIndex];
@@ -49,15 +111,7 @@ pizzaJson.map((item, index)=>{
 
     Clone('.pizza-area').append(pizzaItem);
 });
-
-function CloseModal(){
-    Clone('.pizzaWindowArea').style.opacity = 0;
-    setTimeout(()=>{
-        Clone('.pizzaWindowArea').style.display = 'none';
-    },500);
-}
-
-CloneAll('.pizzaInfo--cancelButton, .pizzaInfo--cancelMobileButton').forEach((item)=>( item.addEventListener('click', CloseModal) ));
+CloneAll('.pizzaInfo--cancelButton, .pizzaInfo--cancelMobileButton').forEach((item)=>{ item.addEventListener('click', CloseModal) });
 
 Clone('.pizzaInfo--qtmenos').addEventListener('click', ()=>{
     if(modalQt > 1){
@@ -72,7 +126,7 @@ Clone('.pizzaInfo--qtmais').addEventListener('click', ()=>{
 CloneAll('.pizzaInfo--size').forEach((size, sizeIndex)=>{
     size.addEventListener('click', ()=>{
         Clone('.pizzaInfo--size.selected').classList.remove('selected');
-        size.target.classList.add('selected');
+        size.classList.add('selected');
     });
 });
 Clone('.pizzaInfo--addButton').addEventListener('click',()=>{
@@ -90,5 +144,15 @@ Clone('.pizzaInfo--addButton').addEventListener('click',()=>{
             qt: modalQt,
         });
     }
+    updateCart();
     CloseModal();
+});
+
+Clone('.menu-openner').addEventListener('click', ()=>{
+    if(cart.length > 0){
+        Clone('aside').style.left = '0';
+    }
+});
+Clone('.menu-closer').addEventListener('click', ()=>{
+    Clone('aside').style.left = '100vw';
 });
